@@ -53,7 +53,7 @@ class LoraNameCollector:
     RETURN_NAMES = ("LORA_NAMES",)
     FUNCTION = "LoraNameConcat"
     
-    def LoraNameConcat(self, Lora_A, Lora_B, Lora_C, Lora_D, Lora_E):
+    def LoraNameConcat(Lora_A=None, Lora_B=None, Lora_C=None, Lora_D=None, Lora_E=None):
         # Filter out None values and store the remaining strings in a list
         lora_names = list(filter(None, [Lora_A, Lora_B, Lora_C, Lora_D, Lora_E]))
         return (lora_names,)
