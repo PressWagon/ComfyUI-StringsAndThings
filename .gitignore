@@ -1,3 +1,6 @@
+# Requirements generation script
+generate_requirements.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
