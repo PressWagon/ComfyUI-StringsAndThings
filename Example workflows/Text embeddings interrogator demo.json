@@ -1,0 +1,682 @@
+{
+  "last_node_id": 14,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 6,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        1236.8504638671875,
+        358.3239440917969
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            5
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "waiNSFWIllustrious_v70.safetensors"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "TextEmbeddingsInterrogator",
+      "pos": [
+        1686.8505859375,
+        208.32388305664062
+      ],
+      "size": [
+        352.79998779296875,
+        102
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "CLIP_1",
+          "type": "CLIP",
+          "link": 3
+        },
+        {
+          "name": "CLIP_2",
+          "type": "CLIP",
+          "link": 5
+        },
+        {
+          "name": "Text_1",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "Text_1"
+          }
+        },
+        {
+          "name": "Text_2",
+          "type": "STRING",
+          "link": 7,
+          "widget": {
+            "name": "Text_2"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Output string",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEmbeddingsInterrogator"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        1236.8504638671875,
+        208.32388305664062
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "prefectiousXLNSFW_v10.safetensors"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        91.4931640625,
+        982.61669921875
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            11
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            9,
+            10
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "prefectiousXLNSFW_v10.safetensors"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        359.3074951171875,
+        528.5480346679688
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            1,
+            2
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "prefectPonyXL_v40.safetensors"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "TextEmbeddingsInterrogator",
+      "pos": [
+        798.3074340820312,
+        521.5479736328125
+      ],
+      "size": [
+        352.79998779296875,
+        102
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "CLIP_1",
+          "type": "CLIP",
+          "link": 1
+        },
+        {
+          "name": "CLIP_2",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Output string",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEmbeddingsInterrogator"
+      },
+      "widgets_values": [
+        "1girl",
+        "5girls"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        183.5901336669922,
+        223.3101043701172
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            13,
+            14
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "prefectPonyXL_v40.safetensors"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "TextEmbeddingsInterrogator",
+      "pos": [
+        633.5900268554688,
+        215.9370574951172
+      ],
+      "size": [
+        352.79998779296875,
+        102
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "CLIP_1",
+          "type": "CLIP",
+          "link": 13
+        },
+        {
+          "name": "CLIP_2",
+          "type": "CLIP",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Output string",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEmbeddingsInterrogator"
+      },
+      "widgets_values": [
+        "1girl",
+        "1girl"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "TextEmbeddingsInterrogator",
+      "pos": [
+        830.5713500976562,
+        965.3140869140625
+      ],
+      "size": [
+        352.79998779296875,
+        102
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "CLIP_1",
+          "type": "CLIP",
+          "link": 12
+        },
+        {
+          "name": "CLIP_2",
+          "type": "CLIP",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Output string",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEmbeddingsInterrogator"
+      },
+      "widgets_values": [
+        "1girl, g0thic, neon, dramatic lighting, masterpiece",
+        "1girl, g0thic, neon, dramatic lighting, masterpiece"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "SDLoraLoader",
+      "pos": [
+        448.3161926269531,
+        828.9873046875
+      ],
+      "size": [
+        315,
+        146
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 11
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 10
+        },
+        {
+          "name": "last_lora",
+          "type": "*",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            12
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "NEXT_LORA",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SDLoraLoader"
+      },
+      "widgets_values": [
+        "g0thicILL3.safetensors",
+        1,
+        1
+      ]
+    },
+    {
+      "id": 7,
+      "type": "String Literal",
+      "pos": [
+        1236.8504638671875,
+        508.323974609375
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            6,
+            7
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "String Literal"
+      },
+      "widgets_values": [
+        "1girl"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "Note",
+      "pos": [
+        649.7936401367188,
+        -110.31495666503906
+      ],
+      "size": [
+        382.8099365234375,
+        157.60330200195312
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Outputs are printed to the console but are also available as a string output.\n\nCompatible with SD 1.5 and SDXL clip formats (though it has to be like with like, you cant compare embedding spaces), operates on the Pooled Attention embedding.\n\nProbably not useful but it does seem to work."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      1,
+      2,
+      0,
+      "CLIP"
+    ],
+    [
+      2,
+      1,
+      1,
+      2,
+      1,
+      "CLIP"
+    ],
+    [
+      3,
+      4,
+      1,
+      5,
+      0,
+      "CLIP"
+    ],
+    [
+      5,
+      6,
+      1,
+      5,
+      1,
+      "CLIP"
+    ],
+    [
+      6,
+      7,
+      0,
+      5,
+      2,
+      "STRING"
+    ],
+    [
+      7,
+      7,
+      0,
+      5,
+      3,
+      "STRING"
+    ],
+    [
+      9,
+      8,
+      1,
+      9,
+      1,
+      "CLIP"
+    ],
+    [
+      10,
+      8,
+      1,
+      11,
+      1,
+      "CLIP"
+    ],
+    [
+      11,
+      8,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      12,
+      11,
+      1,
+      9,
+      0,
+      "CLIP"
+    ],
+    [
+      13,
+      13,
+      1,
+      14,
+      0,
+      "CLIP"
+    ],
+    [
+      14,
+      13,
+      1,
+      14,
+      1,
+      "CLIP"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Same CLIP different text",
+      "bounding": [
+        329.3952331542969,
+        380.6103515625,
+        859.9500122070312,
+        328.04998779296875
+      ],
+      "color": "#3f789e",
+      "font_size": 36,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Same text different CLIP",
+      "bounding": [
+        1226.8504638671875,
+        117.92384338378906,
+        822.800048828125,
+        600.4000244140625
+      ],
+      "color": "#3f789e",
+      "font_size": 36,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Same CLIP and text but comparing the effect of a LoRa",
+      "bounding": [
+        81.49313354492188,
+        738.5872802734375,
+        1111.8773193359375,
+        352.0294494628906
+      ],
+      "color": "#3f789e",
+      "font_size": 36,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Same CLIP same text, should always return very close to 1 and 0",
+      "bounding": [
+        117.71756744384766,
+        91.38872528076172,
+        1078.35498046875,
+        265.0090026855469
+      ],
+      "color": "#3f789e",
+      "font_size": 36,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5131581182307067,
+      "offset": [
+        598.6604936823177,
+        319.06969374249684
+      ]
+    }
+  },
+  "version": 0.4
+}
