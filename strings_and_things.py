@@ -171,6 +171,7 @@ class FormattingSingle:
     Weird nodes that may or may not be useful
         -Image mosaic censor node
         -Fourier analysis node
+        -[SDXL & 1.5 Only for now] Cosine Similarity & Euclidean Distance 
 """     
    
 # Applies a mosaic effect to the entire image. Can be composited back onto the original
@@ -200,10 +201,10 @@ class MosaicEffectNode:
         image = image.permute(0, 3, 1, 2) 
         
         # Convert the tensor to a PIL image (processing only the first image in the batch)
-        image = image_pil = ToPILImage()(image[0])  
+        image = ToPILImage()(image[0])  
 
         # Get image dimensions
-        width, height = image_pil.size
+        width, height = image.size
 
         # Create a new image for the output (same size)
         mosaic_image = Image.new("RGB", (width, height))
@@ -215,7 +216,7 @@ class MosaicEffectNode:
                 box = (x, y, x + tile_size, y + tile_size)
 
                 # Crop the tile from the image
-                tile = image_pil.crop(box)
+                tile = image.crop(box)
 
                 # Get the median color of the tile
                 median_color = self.get_median_color(tile)
@@ -231,7 +232,8 @@ class MosaicEffectNode:
 
         return (mosaic_image_tensor,)
 
-    def get_median_color(self, tile):
+    @staticmethod
+    def get_median_color(tile):
         # Convert the tile to a numpy array
         pixels = np.array(tile)
 
@@ -241,7 +243,7 @@ class MosaicEffectNode:
         b = np.median(pixels[:, :, 2])
 
         return int(r), int(g), int(b)
-        
+       
          
 class FourierAnalysisNode:
     @staticmethod
@@ -258,14 +260,12 @@ class FourierAnalysisNode:
     OUTPUT_NODE = True
     CATEGORY = "Strings&Things/Extras"
 
-    @staticmethod
-    def FAnalysis(self, image):
-
+    def FAnalysis(image):
         # Rearrange the tensor from [batch_size, height, width, channels] to [batch_size, channels, height, width]
         image = image.permute(0, 3, 1, 2)
         
-        #dropping batch dimension
-        image = (image).squeeze(0)
+        # Dropping batch dimension
+        image = image.squeeze(0)
         
         # Perform Fourier Transform on each channel separately
         fft_r = fft2(image[0].numpy())  # Red channel
@@ -300,10 +300,65 @@ class FourierAnalysisNode:
 
         # Convert back to tensor
         image = ToTensor()(fourier_image_pil).unsqueeze(0)  # Add batch dimension back
-        image = image.permute(0, 2, 3, 1) #converting from [B, C, H, W] to [B, H, W, C]
+        image = image.permute(0, 2, 3, 1) # Converting from [B, C, H, W] to [B, H, W, C]
         
         return (image,)
+       
+# Takes two text inputs and two CLIP inputs and calculates the Cosine Similarity and Euclidean distance between them        
+class TextEmbeddingsInterrogator:
+    FUNCTION = "interrogation"
+    CATEGORY = "Strings&Things/Extras"
+    DESCRIPTION = "Calculates the Cosine Similarity and Euclidean Distance between two text embeddings"
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("Output string",)
+    
+    @staticmethod
+    def INPUT_TYPES():
+        return {
+            "required": {
+                "CLIP_1": ("CLIP",),
+                "Text_1": ("STRING",{"default":""}),
+                "CLIP_2": ("CLIP",),
+                "Text_2": ("STRING",{"default":""}),
+            }
+        }
         
+
+        
+    def get_text_embeddings(self, clip, text):
+        # Tokenize text
+        tokens = clip.tokenize(text)
+        embeddings = clip.encode_from_tokens_scheduled(tokens)
+                
+        # embeddings is a list of lists of tensors, we want the only entry in the the top level list (hence [0]) and the second entry of that subordinate list (hence [0][1])
+        # but we need to reference the dictionary key to extract the element from that tensor to get the Pooled Attention
+        pooled_embeddings = embeddings[0][1]['pooled_output']
+        
+        return pooled_embeddings
+        
+    def interrogation(self, Text_1, Text_2, CLIP_1, CLIP_2):
+        #get text embeddings
+        embedding1 = self.get_text_embeddings(CLIP_1, Text_1)
+        embedding2 = self.get_text_embeddings(CLIP_2, Text_2)
+        
+        # Normalize the embeddings
+        embedding1_norm = embedding1 / embedding1.norm(p=2)
+        embedding2_norm = embedding2 / embedding2.norm(p=2)
+
+        # Compute the cosine similarity as a dot product between the normalized vectors
+        cos_sim = torch.mm(embedding1_norm, embedding2_norm.T)
+        cos_sim_value = cos_sim.item()
+        
+        # Calculate distance between embeddings
+        distance = torch.norm(embedding1 - embedding2, p=2)
+        distance_value = distance.item()
+        print(f'\033[1;33mText: "{Text_1}", "{Text_2}"\033[0m')
+        print(f"\033[1;33mCosSim: {cos_sim_value}\033[0m")
+        print(f"\033[1;33mEuclidean Distance: {distance_value}\033[0m")
+        output_string = f"Cosine Similarity: {cos_sim_value}, Euclidean Distance: {distance_value}"
+        
+        return output_string
         
 NODE_CLASS_MAPPINGS = {
     "LoraSelector": LoraSelector,
@@ -313,6 +368,7 @@ NODE_CLASS_MAPPINGS = {
     "FormattingSingle": FormattingSingle,
     "MosaicEffectNode": MosaicEffectNode,
     "FourierAnalysisNode": FourierAnalysisNode,
+    "TextEmbeddingsInterrogator": TextEmbeddingsInterrogator,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -323,4 +379,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FormattingSingle": "Formatting Single String",
     "MosaicEffectNode": "Apply Mosaic Effect",
     "FourierAnalysisNode": "Fourier Analysis",
+    "TextEmbeddingsInterrogator": "Text Embeddings Interrogator",
 }        
