@@ -3,9 +3,9 @@
 A collection of ComfyUI custom nodes for formatting and debugging string data with the intention of collecting generation data to be processed by a custom node pack like comfy-image-saver, as well as miscellaneous extra nodes to experiment with.
 
 # Part 1 - String Formatting
-Lora Selector - lets you pick a LoRa while also outputting its name as a string
+Lora Selector - lets you pick a LoRa while also outputting its name as a string.
 
-Lora Name Collector - takes up to 5 LoRas. Does not currently stack with itself (will fix this eventually)
+Lora Name Collector - takes up to 5 LoRas. Does not currently stack with itself (will fix this eventually).
 
 Debug String - Attempts to print input to the console. Primarily useful for strings, but tries to take anything as input.
 
@@ -14,7 +14,7 @@ Formatting (Pre and Post text) and Concattenating 3 Strings - Added pre and post
 Formatting Single String - Pre and post text for a single string.
 
 # Part 2 - Extras
-Mosaic Effect Node - Applies a mosaic effect (aka tile censoring) to the entire image. Useful for pixelart style generations, or in combination with BBox/SEGS for censoring. (Will add example workflows at some point)
+Mosaic Effect Node - Applies a mosaic effect (aka tile censoring) to the entire image. Useful for pixelart style generations, or in combination with BBox/SEGS for censoring. (Example workflow are available in the 'Example workflows' folder)
 
 Fourier Analysis Node - Some people claim some stuff about AI and repetitive patterns being visible in the fourier analysis. Don't ask me, I'm not a scientist, I just think they look cool. 
 
