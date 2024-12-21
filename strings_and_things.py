@@ -34,7 +34,7 @@ class PWLoraSelector:
         output = str(lora_name)
         return (output, output)
 
-# Takes up to 5 Lora names. Is not setup for chaining multiple PWLoraNameCollector nodes together (TO DO: fix this, chaining creates multiple lists)        
+# Takes up to 5 Lora names. Should now support chaining together multiple PWLoraNameCollector nodes.     
 class PWLoraNameCollector:
     @classmethod
     def INPUT_TYPES(cls):
@@ -47,15 +47,25 @@ class PWLoraNameCollector:
                 "Lora_E": ("STRING",),
             }
         }
-        
+
     CATEGORY = 'Strings&Things'
     RETURN_TYPES = (any_type,)
     RETURN_NAMES = ("LORA_NAMES",)
     FUNCTION = "LoraNameConcat"
-    
+
     def LoraNameConcat(self, Lora_A=None, Lora_B=None, Lora_C=None, Lora_D=None, Lora_E=None):
-        # Filter out None values and store the remaining strings in a list
-        lora_names = list(filter(None, [Lora_A, Lora_B, Lora_C, Lora_D, Lora_E]))
+        # Collect all inputs into a list
+        inputs = [Lora_A, Lora_B, Lora_C, Lora_D, Lora_E]
+
+        # Flatten inputs to handle cases where any of them might already be a list
+        lora_names = []
+        for item in inputs:
+            if item:  # Ignore None values
+                if isinstance(item, list):
+                    lora_names.extend(item)  # Unpack list items
+                else:
+                    lora_names.append(item)  # Append single string
+
         return (lora_names,)
 
  # A node for printing string data to the console      
