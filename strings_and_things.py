@@ -16,7 +16,7 @@ class AnyType(str):
 any_type = AnyType("*")
 
 # Picks a Lora as an output to both send to a lora loader and the metadata as a string
-class LoraSelector:
+class PWLoraSelector:
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -34,8 +34,8 @@ class LoraSelector:
         output = str(lora_name)
         return (output, output)
 
-# Takes up to 5 Lora names. Is not setup for chaining multiple LoraNameCollector nodes together (TO DO: fix this, chaining creates multiple lists)        
-class LoraNameCollector:
+# Takes up to 5 Lora names. Is not setup for chaining multiple PWLoraNameCollector nodes together (TO DO: fix this, chaining creates multiple lists)        
+class PWLoraNameCollector:
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -53,7 +53,7 @@ class LoraNameCollector:
     RETURN_NAMES = ("LORA_NAMES",)
     FUNCTION = "LoraNameConcat"
     
-    def LoraNameConcat(Lora_A=None, Lora_B=None, Lora_C=None, Lora_D=None, Lora_E=None):
+    def LoraNameConcat(self, Lora_A=None, Lora_B=None, Lora_C=None, Lora_D=None, Lora_E=None):
         # Filter out None values and store the remaining strings in a list
         lora_names = list(filter(None, [Lora_A, Lora_B, Lora_C, Lora_D, Lora_E]))
         return (lora_names,)
@@ -361,8 +361,8 @@ class TextEmbeddingsInterrogator:
         return output_string
         
 NODE_CLASS_MAPPINGS = {
-    "LoraSelector": LoraSelector,
-    "LoraNameCollector": LoraNameCollector,
+    "PWLoraSelector": PWLoraSelector,
+    "PWLoraNameCollector": PWLoraNameCollector,
     "DebugString": DebugString,
     "FormatConcatStrings": FormatConcatStrings,
     "FormattingSingle": FormattingSingle,
@@ -372,8 +372,8 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LoraSelector": "Lora Selector",
-    "LoraNameCollector": "Lora Name Collector",
+    "PWLoraSelector": "Lora Selector",
+    "PWLoraNameCollector": "Lora Name Collector",
     "DebugString": "🔧 Debug String",
     "FormatConcatStrings": "Formatting and Concatenating Strings",
     "FormattingSingle": "Formatting Single String",
