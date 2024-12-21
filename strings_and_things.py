@@ -260,7 +260,7 @@ class FourierAnalysisNode:
     OUTPUT_NODE = True
     CATEGORY = "Strings&Things/Extras"
 
-    def FAnalysis(image):
+    def FAnalysis(self,image):
         # Rearrange the tensor from [batch_size, height, width, channels] to [batch_size, channels, height, width]
         image = image.permute(0, 3, 1, 2)
         
