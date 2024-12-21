@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-stringsandthings"
+description = "EA collection of ComfyUI custom nodes for formatting and debugging string data with the intention of collecting generation data to be processed by a custom node pack like comfy-image-saver, as well as miscellaneous extra nodes to experiment with."
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["torch==2.5.1", "torchvision==0.20.1", "scipy==1.13.1", "Pillow==10.3.0", "numpy==1.26.4"]
+
+[project.urls]
+Repository = "https://github.com/PressWagon/ComfyUI-StringsAndThings"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-StringsAndThings"
+Icon = ""
