@@ -5,7 +5,7 @@ A collection of ComfyUI custom nodes for formatting and debugging string data wi
 # Part 1 - String Formatting
 Lora Selector - lets you pick a LoRa while also outputting its name as a string.
 
-Lora Name Collector - takes up to 5 LoRas. Does not currently stack with itself (will fix this eventually).
+Lora Name Collector - takes up to 5 LoRas, should now work chaining multiple together for >5 loras.
 
 Debug String - Attempts to print input to the console. Primarily useful for strings, but tries to take anything as input.
 
