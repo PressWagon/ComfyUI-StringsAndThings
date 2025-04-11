@@ -370,6 +370,42 @@ class TextEmbeddingsInterrogator:
         
         return output_string
         
+# Takes two images and outputs an image of the pixel-wise difference 
+class ImageDifference:
+    FUNCTION = "ImageDiff"
+    CATEGORY = "Strings&Things/Extras"
+    DESCRIPTION = "Pairwise image comparrison"
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    
+    @staticmethod
+    def INPUT_TYPES():
+        return {
+            "required": {
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+            }
+        }
+    
+    def ImageDiff(self, image1, image2):
+        #print(image1.shape)
+        #print(image2.shape)
+        image1=image1.squeeze(0)
+        image2=image2.squeeze(0)
+        diff_image = image1 - image2
+        #print(diff_image.shape)
+        diff_image=diff_image.unsqueeze(0)
+        #print(diff_image.shape)
+        
+        # Mean Squared Error
+        mse = torch.mean((image1 - image2) ** 2)
+        mse_percent = mse.item() * 100
+        mse_percent_formatted = f"{mse_percent:.2f}%"
+        print(f"\033[1;33mMean Square Error: {mse_percent_formatted}\033[0m")
+        
+        return diff_image,
+        
 NODE_CLASS_MAPPINGS = {
     "PWLoraSelector": PWLoraSelector,
     "PWLoraNameCollector": PWLoraNameCollector,
@@ -379,6 +415,7 @@ NODE_CLASS_MAPPINGS = {
     "MosaicEffectNode": MosaicEffectNode,
     "FourierAnalysisNode": FourierAnalysisNode,
     "TextEmbeddingsInterrogator": TextEmbeddingsInterrogator,
+    "ImageDifference": ImageDifference,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -390,4 +427,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "MosaicEffectNode": "Apply Mosaic Effect",
     "FourierAnalysisNode": "Fourier Analysis",
     "TextEmbeddingsInterrogator": "Text Embeddings Interrogator",
+    "ImageDifference": "Image Difference",
 }        
