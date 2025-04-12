@@ -20,4 +20,4 @@ A collection of ComfyUI custom nodes for formatting and debugging string data wi
 
 **Text Embedding Interrogator** - Calculates the Cosine Similarity and Euclidean Distance between the Pooled Attention CLIP text embeddings for two embeddings.
 
-**Image Difference** - Calculates the simple pixel-wise difference between two images and outputs an image of the result. It also calculates the Mean Square Error as a measure of difference between the images and displays the value in the console as a percentage (0% = same image, 100% = one black vs one white image).
+**Image Difference** - Calculates the simple pixel-wise difference between two images and outputs an image of the result. It also calculates the Mean Square Error as a measure of difference between the images and displays the value in the console as a percentage (0% = same image, 100% = one black vs one white image). The SME calculation can be skipped by toggling console_mse to false. For images with subtle differences you can toggle contrast_boost to true, increasing the magnitude of the displayed differences by a factor of 5.
