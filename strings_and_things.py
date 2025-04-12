@@ -385,24 +385,35 @@ class ImageDifference:
             "required": {
                 "image1": ("IMAGE",),
                 "image2": ("IMAGE",),
+                "contrast_boost": ("BOOLEAN", {
+                    "default": False
+                    }),
+                "console_mse": ("BOOLEAN", {
+                    "default": True
+                    }),
             }
         }
     
-    def ImageDiff(self, image1, image2):
+    def ImageDiff(self, image1, image2, contrast_boost, console_mse):
         #print(image1.shape)
         #print(image2.shape)
         image1=image1.squeeze(0)
         image2=image2.squeeze(0)
-        diff_image = image1 - image2
+        diff_image = torch.abs(image1 - image2) #Updated difference calculation to take absolute value; size is more important that directionality here.
         #print(diff_image.shape)
+        if contrast_boost:
+            boost_factor = 5.0  # can make this a user input later
+            diff_image = (diff_image * boost_factor).clamp(0,1)
+        
         diff_image=diff_image.unsqueeze(0)
         #print(diff_image.shape)
         
         # Mean Squared Error
-        mse = torch.mean((image1 - image2) ** 2)
-        mse_percent = mse.item() * 100
-        mse_percent_formatted = f"{mse_percent:.2f}%"
-        print(f"\033[1;33mMean Square Error: {mse_percent_formatted}\033[0m")
+        if console_mse:
+            mse = torch.mean((image1 - image2) ** 2)
+            mse_percent = mse.item() * 100
+            mse_percent_formatted = f"{mse_percent:.2f}%"
+            print(f"\033[1;33mMean Square Error: {mse_percent_formatted}\033[0m")
         
         return diff_image,
         
