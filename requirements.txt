@@ -1,4 +1,4 @@
-torch==2.5.1
+torch==2.6.0
 torchvision==0.20.1
 scipy==1.13.1
 Pillow==10.3.0
