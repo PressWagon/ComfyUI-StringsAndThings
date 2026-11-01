@@ -21,3 +21,6 @@ A collection of ComfyUI custom nodes for formatting and debugging string data wi
 **Text Embedding Interrogator** - Calculates the Cosine Similarity and Euclidean Distance between the Pooled Attention CLIP text embeddings for two embeddings.
 
 **Image Difference** - Calculates the simple pixel-wise difference between two images and outputs an image of the result. It also calculates the Mean Square Error as a measure of difference between the images and displays the value in the console as a percentage (0% = same image, 100% = one black vs one white image). The SME calculation can be skipped by toggling console_mse to false. For images with subtle differences you can toggle contrast_boost to true, increasing the magnitude of the displayed differences by a factor of 5.
+
+## Part 3 - Moss Image
+**MOSS to ComfyUI BBoxes** - Takes a json string in MOSS-Image's Layout2Image prompt format and separates out the bound box data and reformats it to import into Create Bounding Boxes node. The summary output can be input into the Moss-Image Layout Prompt's prompt field. For the data to be reformatted correctly both nodes should have their dimensions set to match the original image. Imported bounding boxes may not be perfectly accurate due to rounding and clipping on the grid.
