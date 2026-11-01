@@ -628,12 +628,8 @@ class MOSSToComfyUIBBoxes:
             indent=4
         )
 
-        # Extract and serialise the summary separately.
-        summary = json.dumps(
-            data.get("summary", {}),
-            ensure_ascii=False,
-            indent=4
-        )
+        # Extract the summary caption as plain text.
+        summary = data.get("summary", {}).get("caption", "")
 
         return (bboxes_json, summary)
 
