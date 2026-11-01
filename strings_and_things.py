@@ -3,8 +3,14 @@ import folder_paths
 import torch
 from torchvision.transforms import ToPILImage, ToTensor
 from scipy.fftpack import fft2, fftshift
+from scipy.stats import entropy
 from PIL import Image
 import numpy as np
+from skimage.filters.rank import entropy as local_entropy
+from skimage.morphology import disk
+import matplotlib.cm as cm
+import json
+
 
 class AnyType(str):
     """A special type that can be connected to any other types. Credit to pythongosssss"""
@@ -24,17 +30,17 @@ class PWLoraSelector:
                 "lora_name": (folder_paths.get_filename_list("loras"),),  # List of LoRA filenames
             }
         }
-        
-    CATEGORY = 'Strings&Things'  
+
+    CATEGORY = 'Strings&Things'
     RETURN_TYPES = (folder_paths.get_filename_list("loras"), "STRING",)
-    RETURN_NAMES = ("LORA_NAME", "metadata",)  
-    FUNCTION = "get_lora_name"          
+    RETURN_NAMES = ("LORA_NAME", "metadata",)
+    FUNCTION = "get_lora_name"
 
     def get_lora_name(self, lora_name):
         output = str(lora_name)
         return (output, output)
 
-# Takes up to 5 Lora names. Should now support chaining together multiple PWLoraNameCollector nodes.     
+# Takes up to 5 Lora names. Is not setup for chaining multiple PWLoraNameCollector nodes together (TO DO: fix this, chaining creates multiple lists)
 class PWLoraNameCollector:
     @classmethod
     def INPUT_TYPES(cls):
@@ -68,7 +74,7 @@ class PWLoraNameCollector:
 
         return (lora_names,)
 
- # A node for printing string data to the console      
+ # A node for printing string data to the console
 class DebugString:
     CATEGORY = "Strings&Things"
     FUNCTION = "PrintString"
@@ -81,7 +87,7 @@ class DebugString:
             }
         }
 
-    RETURN_TYPES = ("STRING",)  
+    RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("DebugOutput",)  # Optional output, maybe it'll come in handy some day.
     OUTPUT_NODE = True
 
@@ -89,7 +95,7 @@ class DebugString:
         DebugString=str(DebugString)
         print(f"\033[1;33mDebugString: {DebugString}\033[0m")  # Output the string to the console for debugging
         return (DebugString,)  # Return the input string for potential chaining
-        
+
 class FormatConcatStrings:
     @classmethod
     def INPUT_TYPES(cls):
@@ -176,25 +182,26 @@ class FormattingSingle:
         else:
             formatted_string = PRE_string + BODY_string + POST_string
         return (formatted_string,)
-        
+
 """ Part 2
     Weird nodes that may or may not be useful
         -Image mosaic censor node
         -Fourier analysis node
-        -[SDXL & 1.5 Only for now] Cosine Similarity & Euclidean Distance 
-"""     
-   
+        -[SDXL & 1.5 Only for now] Cosine Similarity & Euclidean Distance
+        -Image difference comparison tool
+"""
+
 # Applies a mosaic effect to the entire image. Can be composited back onto the original
 class MosaicEffectNode:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),  
+                "image": ("IMAGE",),
                 "tile_size": ("INT", {
-                    "default": 10, 
-                    "min": 1, 
-                    "max": 100, 
+                    "default": 10,
+                    "min": 1,
+                    "max": 100,
                     "step": 1
                 }),
             },
@@ -206,12 +213,12 @@ class MosaicEffectNode:
     CATEGORY = "Strings&Things/Extras"
     OUTPUT_NODE = True
 
-    def apply_mosaic(self, image, tile_size=10):       
+    def apply_mosaic(self, image, tile_size=10):
         # Rearrange the tensor from Comfy's [batch_size, height, width, channels] format to PIL's [batch_size, channels, height, width] format
-        image = image.permute(0, 3, 1, 2) 
-        
+        image = image.permute(0, 3, 1, 2)
+
         # Convert the tensor to a PIL image (processing only the first image in the batch)
-        image = ToPILImage()(image[0])  
+        image = ToPILImage()(image[0])
 
         # Get image dimensions
         width, height = image.size
@@ -253,8 +260,8 @@ class MosaicEffectNode:
         b = np.median(pixels[:, :, 2])
 
         return int(r), int(g), int(b)
-       
-         
+
+
 class FourierAnalysisNode:
     @staticmethod
     def INPUT_TYPES():
@@ -264,57 +271,123 @@ class FourierAnalysisNode:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("Image",)
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("Fourier Image", "Entropy Heatmap")
     FUNCTION = "FAnalysis"
     OUTPUT_NODE = True
     CATEGORY = "Strings&Things/Extras"
 
-    def FAnalysis(self,image):
-        # Rearrange the tensor from [batch_size, height, width, channels] to [batch_size, channels, height, width]
-        image = image.permute(0, 3, 1, 2)
-        
-        # Dropping batch dimension
-        image = image.squeeze(0)
-        
-        # Perform Fourier Transform on each channel separately
-        fft_r = fft2(image[0].numpy())  # Red channel
-        fft_g = fft2(image[1].numpy())  # Green channel
-        fft_b = fft2(image[2].numpy())  # Blue channel
+    @staticmethod
+    def calculate_entropy(image_channel):
+        hist, _ = np.histogram(image_channel.flatten(), bins=256, range=(0, 255), density=True)
+        hist = hist[hist > 0]
+        return entropy(hist, base=2)
 
-        # Shift the zero frequency component to the center
+    @staticmethod
+    def radial_entropy(magnitude):
+        h, w = magnitude.shape
+        cy, cx = h // 2, w // 2
+        y, x = np.indices((h, w))
+        r = np.sqrt((x - cx)**2 + (y - cy)**2).astype(np.int32)
+
+        max_r = np.max(r)
+        entropy_values = np.zeros(max_r + 1)
+
+        for radius in range(max_r + 1):
+            mask = (r == radius)
+            if np.any(mask):
+                values = magnitude[mask]
+                hist, _ = np.histogram(values, bins=256, range=(0, 255), density=True)
+                hist = hist[hist > 0]
+                entropy_values[radius] = entropy(hist, base=2)
+
+        return entropy_values
+
+    def FAnalysis(self, image):
+        image = image.permute(0, 3, 1, 2)  # [B, C, H, W]
+        image = image.squeeze(0)          # [C, H, W]
+
+        # Fourier Transform
+        fft_r = fft2(image[0].numpy())
+        fft_g = fft2(image[1].numpy())
+        fft_b = fft2(image[2].numpy())
+
         fft_r_shifted = fftshift(fft_r)
         fft_g_shifted = fftshift(fft_g)
         fft_b_shifted = fftshift(fft_b)
 
-        # Take log of the magnitude for visualization and normalize to 0-255 range
+        # Magnitude spectrum
         magnitude_r = np.log(1 + np.abs(fft_r_shifted))
         magnitude_g = np.log(1 + np.abs(fft_g_shifted))
         magnitude_b = np.log(1 + np.abs(fft_b_shifted))
 
-        # Normalize each channel to range [0, 255]
-        magnitude_r = (magnitude_r - np.min(magnitude_r)) / (np.max(magnitude_r) - np.min(magnitude_r)) * 255
-        magnitude_g = (magnitude_g - np.min(magnitude_g)) / (np.max(magnitude_g) - np.min(magnitude_g)) * 255
-        magnitude_b = (magnitude_b - np.min(magnitude_b)) / (np.max(magnitude_b) - np.min(magnitude_b)) * 255
+        # Normalize to 0-255
+        norm = lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)) * 255
+        magnitude_r = norm(magnitude_r)
+        magnitude_g = norm(magnitude_g)
+        magnitude_b = norm(magnitude_b)
 
-        # Convert the magnitude to uint8 type
-        magnitude_r = magnitude_r.astype(np.uint8)
-        magnitude_g = magnitude_g.astype(np.uint8)
-        magnitude_b = magnitude_b.astype(np.uint8)
+        # Radial Entropy Calculation
+        radial_entropy_r = self.radial_entropy(magnitude_r)
+        radial_entropy_g = self.radial_entropy(magnitude_g)
+        radial_entropy_b = self.radial_entropy(magnitude_b)
+        radial_entropy_avg = (radial_entropy_r + radial_entropy_g + radial_entropy_b) / 3
 
-        # Stack the channels back into a 3D array (height, width, 3)
-        magnitude_image = np.stack([magnitude_r, magnitude_g, magnitude_b], axis=-1)
+        # Optional: Print or plot
+        print(f"\033[1;36mRadial Entropy Avg:\033[0m {radial_entropy_avg[:20]}...")
 
-        # Convert the magnitude image back to a PIL image
-        fourier_image_pil = Image.fromarray(magnitude_image)
+        # Entropy calc
+        entropy_r = self.calculate_entropy(magnitude_r)
+        entropy_g = self.calculate_entropy(magnitude_g)
+        entropy_b = self.calculate_entropy(magnitude_b)
+        entropy_avg = (entropy_r + entropy_g + entropy_b) / 3
+        #print(f"\033[1;33mAverage Entropy: {entropy_avg}\033[0m")
 
-        # Convert back to tensor
-        image = ToTensor()(fourier_image_pil).unsqueeze(0)  # Add batch dimension back
-        image = image.permute(0, 2, 3, 1) # Converting from [B, C, H, W] to [B, H, W, C]
-        
-        return (image,)
-       
-# Takes two text inputs and two CLIP inputs and calculates the Cosine Similarity and Euclidean distance between them        
+        # Combine channels
+        magnitude_stack = np.stack([magnitude_r, magnitude_g, magnitude_b], axis=-1).astype(np.uint8)
+        fourier_image_pil = Image.fromarray(magnitude_stack)
+
+        # ---- Entropy Heatmap ----
+        #print(image.shape)
+        image_np = image.permute(1, 2, 0).numpy()  # [C, H,W] -> [H, W, C]
+        image_np = (image_np * 255).astype(np.uint8)
+        #print(image_np.min(), image_np.max(), image_np.dtype)
+
+        # Split channels
+        r = image_np[:, :, 0].astype(np.uint8)
+        g = image_np[:, :, 1].astype(np.uint8)
+        b = image_np[:, :, 2].astype(np.uint8)
+        #print(f"{r.shape}, {g.shape}, {b.shape}")
+
+        # Local entropy per channel
+        entropy_r = local_entropy(r, disk(5))
+        entropy_g = local_entropy(g, disk(5))
+        entropy_b = local_entropy(b, disk(5))
+
+        #Normalize
+        entropy_r = norm(entropy_r)
+        entropy_g = norm(entropy_g)
+        entropy_b = norm(entropy_b)
+        #print(f"{entropy_r.shape}, {entropy_g.shape}, {entropy_b.shape}")
+
+        #stack back into RGB
+        #entropy_rgb = np.stack([entropy_r, entropy_g, entropy_b], axis=-1).astype(np.uint8) # [H, W, C]
+        #print(entropy_rgb.shape)
+        colormap = cm.viridis
+        entropy_avg_map = ((entropy_r + entropy_g + entropy_b) / 3).astype(np.uint8)
+        colourmap = colormap(entropy_avg_map)
+        colourmap = (colourmap[:, :, :3] * 255).astype(np.uint8)
+        entropy_rgb_pil = Image.fromarray(colourmap)
+
+
+        # Convert both images back to tensors
+        fourier_tensor = ToTensor()(fourier_image_pil).unsqueeze(0).permute(0, 2, 3, 1)
+        #heatmap_tensor = ToTensor()(heatmap_pil).unsqueeze(0).permute(0, 2, 3, 1)
+        entropy_tensor = ToTensor()(entropy_rgb_pil).unsqueeze(0).permute(0, 2, 3, 1)
+
+        return (fourier_tensor, entropy_tensor)
+
+# Takes two text inputs and two CLIP inputs and calculates the Cosine Similarity and Euclidean distance between them
 class TextEmbeddingsInterrogator:
     FUNCTION = "interrogation"
     CATEGORY = "Strings&Things/Extras"
@@ -322,7 +395,7 @@ class TextEmbeddingsInterrogator:
     OUTPUT_NODE = True
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("Output string",)
-    
+
     @staticmethod
     def INPUT_TYPES():
         return {
@@ -333,25 +406,25 @@ class TextEmbeddingsInterrogator:
                 "Text_2": ("STRING",{"default":""}),
             }
         }
-        
 
-        
+
+
     def get_text_embeddings(self, clip, text):
         # Tokenize text
         tokens = clip.tokenize(text)
         embeddings = clip.encode_from_tokens_scheduled(tokens)
-                
+
         # embeddings is a list of lists of tensors, we want the only entry in the the top level list (hence [0]) and the second entry of that subordinate list (hence [0][1])
         # but we need to reference the dictionary key to extract the element from that tensor to get the Pooled Attention
         pooled_embeddings = embeddings[0][1]['pooled_output']
-        
+
         return pooled_embeddings
-        
+
     def interrogation(self, Text_1, Text_2, CLIP_1, CLIP_2):
         #get text embeddings
         embedding1 = self.get_text_embeddings(CLIP_1, Text_1)
         embedding2 = self.get_text_embeddings(CLIP_2, Text_2)
-        
+
         # Normalize the embeddings
         embedding1_norm = embedding1 / embedding1.norm(p=2)
         embedding2_norm = embedding2 / embedding2.norm(p=2)
@@ -359,7 +432,7 @@ class TextEmbeddingsInterrogator:
         # Compute the cosine similarity as a dot product between the normalized vectors
         cos_sim = torch.mm(embedding1_norm, embedding2_norm.T)
         cos_sim_value = cos_sim.item()
-        
+
         # Calculate distance between embeddings
         distance = torch.norm(embedding1 - embedding2, p=2)
         distance_value = distance.item()
@@ -367,10 +440,10 @@ class TextEmbeddingsInterrogator:
         print(f"\033[1;33mCosSim: {cos_sim_value}\033[0m")
         print(f"\033[1;33mEuclidean Distance: {distance_value}\033[0m")
         output_string = f"Cosine Similarity: {cos_sim_value}, Euclidean Distance: {distance_value}"
-        
+
         return output_string
-        
-# Takes two images and outputs an image of the pixel-wise difference 
+
+# Takes two images and outputs an image of the pixel-wise difference
 class ImageDifference:
     FUNCTION = "ImageDiff"
     CATEGORY = "Strings&Things/Extras"
@@ -378,7 +451,7 @@ class ImageDifference:
     OUTPUT_NODE = True
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
-    
+
     @staticmethod
     def INPUT_TYPES():
         return {
@@ -393,30 +466,177 @@ class ImageDifference:
                     }),
             }
         }
-    
+
     def ImageDiff(self, image1, image2, contrast_boost, console_mse):
         #print(image1.shape)
         #print(image2.shape)
         image1=image1.squeeze(0)
         image2=image2.squeeze(0)
-        diff_image = torch.abs(image1 - image2) #Updated difference calculation to take absolute value; size is more important that directionality here.
+        diff_image = torch.abs(image1 - image2) #Updated difference calculation to take absolute value; size is more important that directionality here. Would be nice to have a toggleable High Contrast Mode.
         #print(diff_image.shape)
         if contrast_boost:
             boost_factor = 5.0  # can make this a user input later
             diff_image = (diff_image * boost_factor).clamp(0,1)
-        
+
         diff_image=diff_image.unsqueeze(0)
         #print(diff_image.shape)
-        
+
         # Mean Squared Error
         if console_mse:
             mse = torch.mean((image1 - image2) ** 2)
             mse_percent = mse.item() * 100
             mse_percent_formatted = f"{mse_percent:.2f}%"
             print(f"\033[1;33mMean Square Error: {mse_percent_formatted}\033[0m")
-        
+
         return diff_image,
-        
+
+'''
+Part 3 MOSS-Image
+    -MOSS to ComfyUI BBoxes
+ '''
+
+#Converts the Moss-Image Layout2Image json format into the correct
+class MOSSToComfyUIBBoxes:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "moss_json": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": ""
+                    }
+                ),
+                "source_width": (
+                    "INT",
+                    {
+                        "default": 1024,
+                        "min": 1,
+                        "max": 16384
+                    }
+                ),
+                "source_height": (
+                    "INT",
+                    {
+                        "default": 1024,
+                        "min": 1,
+                        "max": 16384
+                    }
+                ),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("bboxes_json", "summary")
+
+    OUTPUT_TOOLTIPS = (
+        "Converted bounding-box elements in ComfyUI's 0-1000 coordinate format. Connect to the Create Bounding Boxes node's bboxes input.",
+        "The summary section extracted from the prompt, can be connected to the MOSS-Image Layout prompt input to reproduce original image."
+    )
+
+    FUNCTION = "convert"
+    CATEGORY = "MOSS/Utilities"
+
+    def convert(self, moss_json, source_width, source_height):
+
+        if not moss_json or not moss_json.strip():
+            return ("", "{}")
+        try:
+            data = json.loads(moss_json)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Invalid MOSS JSON: {exc}"
+            ) from exc
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                "Expected a JSON object containing an items array."
+            )
+
+        if data.get("bbox_coord_space") != "abs_centralized":
+            raise ValueError(
+                "Expected bbox_coord_space='abs_centralized'."
+            )
+
+        if data.get("bbox_format", "yxyx") != "yxyx":
+            raise ValueError(
+                "Only bbox_format='yxyx' is currently supported."
+            )
+
+        items = data.get("items")
+
+        if not isinstance(items, list):
+            raise ValueError(
+                "The MOSS JSON does not contain a valid items array."
+            )
+
+        converted = []
+
+        for index, item in enumerate(items):
+
+            if not isinstance(item, dict):
+                raise ValueError(
+                    f"Item {index} is not a JSON object."
+                )
+
+            bbox = item.get("bbox")
+
+            if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+                raise ValueError(
+                    f"Item {index} has an invalid bbox. "
+                    "Expected [ymin, xmin, ymax, xmax]."
+                )
+
+            try:
+                ymin, xmin, ymax, xmax = map(float, bbox)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Item {index} contains non-numeric bbox coordinates."
+                ) from exc
+
+            converted_bbox = [
+                round((ymin + source_height / 2) / source_height * 1000),
+                round((xmin + source_width / 2) / source_width * 1000),
+                round((ymax + source_height / 2) / source_height * 1000),
+                round((xmax + source_width / 2) / source_width * 1000),
+            ]
+
+            converted_bbox = [
+                max(0, min(1000, value))
+                for value in converted_bbox
+            ]
+
+            label = item.get("label", "object")
+
+            element = {
+                "type": "text" if label == "text" else "obj",
+                "bbox": converted_bbox,
+                "desc": item.get("caption", ""),
+                "color_palette": item.get("palette", [])
+            }
+
+            if element["type"] == "text":
+                element["text"] = item.get("text", "")
+
+            converted.append(element)
+
+        bboxes_json = json.dumps(
+            converted,
+            ensure_ascii=False,
+            indent=4
+        )
+
+        # Extract and serialise the summary separately.
+        summary = json.dumps(
+            data.get("summary", {}),
+            ensure_ascii=False,
+            indent=4
+        )
+
+        return (bboxes_json, summary)
+
 NODE_CLASS_MAPPINGS = {
     "PWLoraSelector": PWLoraSelector,
     "PWLoraNameCollector": PWLoraNameCollector,
@@ -427,6 +647,7 @@ NODE_CLASS_MAPPINGS = {
     "FourierAnalysisNode": FourierAnalysisNode,
     "TextEmbeddingsInterrogator": TextEmbeddingsInterrogator,
     "ImageDifference": ImageDifference,
+    "MOSSToComfyUIBBoxes": MOSSToComfyUIBBoxes,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -439,4 +660,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FourierAnalysisNode": "Fourier Analysis",
     "TextEmbeddingsInterrogator": "Text Embeddings Interrogator",
     "ImageDifference": "Image Difference",
-}        
+    "MOSSToComfyUIBBoxes": "MOSS to ComfyUI BBoxes",
+}
